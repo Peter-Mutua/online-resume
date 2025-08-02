@@ -6,6 +6,7 @@ interface TypewriterTextProps {
   delay?: number;
   className?: string;
   onComplete?: () => void;
+  reduceMotion?: boolean;
 }
 
 const TypewriterText: React.FC<TypewriterTextProps> = ({ 
@@ -13,22 +14,29 @@ const TypewriterText: React.FC<TypewriterTextProps> = ({
   speed = 50, 
   delay = 0, 
   className = "",
-  onComplete 
+  onComplete,
+  reduceMotion = false
 }) => {
   const [displayText, setDisplayText] = useState('');
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isStarted, setIsStarted] = useState(false);
 
   useEffect(() => {
+    if (reduceMotion) {
+      setDisplayText(text);
+      if (onComplete) onComplete();
+      return;
+    }
+
     const startTimer = setTimeout(() => {
       setIsStarted(true);
     }, delay);
 
     return () => clearTimeout(startTimer);
-  }, [delay]);
+  }, [delay, reduceMotion, text, onComplete]);
 
   useEffect(() => {
-    if (!isStarted) return;
+    if (!isStarted || reduceMotion) return;
 
     if (currentIndex < text.length) {
       const timer = setTimeout(() => {
@@ -40,12 +48,12 @@ const TypewriterText: React.FC<TypewriterTextProps> = ({
     } else if (onComplete) {
       onComplete();
     }
-  }, [currentIndex, text, speed, isStarted, onComplete]);
+  }, [currentIndex, text, speed, isStarted, onComplete, reduceMotion]);
 
   return (
-    <span className={className}>
+    <span className={`inline-block ${className}`}>
       {displayText}
-      {currentIndex < text.length && (
+      {!reduceMotion && currentIndex < text.length && (
         <span className="animate-pulse">|</span>
       )}
     </span>
